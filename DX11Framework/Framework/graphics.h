@@ -1,10 +1,9 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-// Once I generalize the graphics system, this goes away
-#include <windows.h>
+#include "d3drenderer.h"
 
-// Globals will be dying soon.
+// These should be serialized in.  Serialization should be one of the next things I do...
 const bool FULL_SCREEN = false;
 const bool VSYNC_ENABLED = true;
 const float SCREEN_FAR = 1000.0f;
@@ -16,7 +15,6 @@ class Graphics
 {
   public:
     Graphics();
-    Graphics(const Graphics& rhs);
     ~Graphics();
 
     bool Initialize(int screenWidth, int screenHeight, HWND hwnd);
@@ -25,6 +23,9 @@ class Graphics
 
   private:
     bool Render();
+
+  private:
+    D3DRenderer* m_d3dRenderer;
 };
 
 #endif  // GRAPHICS_H
