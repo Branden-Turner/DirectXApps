@@ -1,11 +1,11 @@
 #include "d3drenderer.h"
 
 #define CHECK(x) if(FAILED(x)) return false;
-#define ReleaseCOM(x) { if(x){ x->Release(); x = NULL; } }
-#define SafeDelete(x) { delete x; x = NULL; }
+#define ReleaseCOM(x) { if(x){ x->Release(); x = 0; } }
+#define SafeDelete(x) { delete x; x = 0; }
 
-D3DRenderer::D3DRenderer() : m_swapChain(NULL), m_device(NULL), m_deviceContext(NULL), m_renderTargetView(NULL), 
-                             m_depthStencilBuffer(NULL), m_depthStencilState(NULL), m_depthStencilView(NULL), m_rasterState(NULL)
+D3DRenderer::D3DRenderer() : m_swapChain(0), m_device(0), m_deviceContext(0), m_renderTargetView(0), 
+                             m_depthStencilBuffer(0), m_depthStencilState(0), m_depthStencilView(0), m_rasterState(0)
 {
 }
 
@@ -33,7 +33,7 @@ bool D3DRenderer::Initialize( int screenWidth, int screenHeight, bool vsync, HWN
 
   // Get the number of modes that fit the DXGI_FORMAT_R8G8B8A8_UNORM display format for the adapter output (monitor).
   unsigned numModes;
-  CHECK( adapterOutput->GetDisplayModeList( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, NULL ) );
+  CHECK( adapterOutput->GetDisplayModeList( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, 0 ) );
 
   // Create a list to hold all the possible display modes for this monitor/video card combination.
   DXGI_MODE_DESC* displayModeList = new DXGI_MODE_DESC[numModes];
@@ -64,7 +64,7 @@ bool D3DRenderer::Initialize( int screenWidth, int screenHeight, bool vsync, HWN
 
   // Release the display mode list.
   delete [] displayModeList;
-  displayModeList = NULL;
+  displayModeList = 0;
 
   // Release the adapter output.
   ReleaseCOM(adapterOutput);
@@ -128,15 +128,15 @@ bool D3DRenderer::Initialize( int screenWidth, int screenHeight, bool vsync, HWN
   D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
 
   // Create the swap chain, Direct3D device, and Direct3D device context.
-  CHECK( D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &featureLevel, 1, 
-    D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, NULL, &m_deviceContext));
+  CHECK( D3D11CreateDeviceAndSwapChain(0, D3D_DRIVER_TYPE_HARDWARE, 0, 0, &featureLevel, 1, 
+    D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, 0, &m_deviceContext));
 
   // Get the pointer to the back buffer.
   ID3D11Texture2D* backBufferPtr;
   CHECK( m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr) );
 
   // Create the render target view with the back buffer pointer.
-  CHECK( m_device->CreateRenderTargetView(backBufferPtr, NULL, &m_renderTargetView) );
+  CHECK( m_device->CreateRenderTargetView(backBufferPtr, 0, &m_renderTargetView) );
 
   // Release pointer to the back buffer as we no longer need it.
   ReleaseCOM( backBufferPtr );
@@ -159,7 +159,7 @@ bool D3DRenderer::Initialize( int screenWidth, int screenHeight, bool vsync, HWN
   depthBufferDesc.MiscFlags = 0;
 
   // Create the depth/stencil buffer
-  CHECK( m_device->CreateTexture2D(&depthBufferDesc, NULL, &m_depthStencilBuffer) );
+  CHECK( m_device->CreateTexture2D(&depthBufferDesc, 0, &m_depthStencilBuffer) );
 
   // Initialize the description of the stencil state.
   D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
@@ -263,7 +263,7 @@ void D3DRenderer::Shutdown()
 {
   // Before shutting down set to windowed mode or when you release the swap chain it will throw an exception.
   if(m_swapChain)
-    m_swapChain->SetFullscreenState(false, NULL);
+    m_swapChain->SetFullscreenState(false, 0);
 
   // Release all COM Objects
   ReleaseCOM(m_rasterState);

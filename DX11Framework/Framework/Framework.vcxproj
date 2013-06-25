@@ -87,6 +87,7 @@
     <ClInclude Include="d3drenderer.h" />
     <ClInclude Include="graphics.h" />
     <ClInclude Include="input.h" />
+    <ClInclude Include="system.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

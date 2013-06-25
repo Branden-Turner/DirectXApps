@@ -1,12 +1,16 @@
 #include "graphics.h"
 
+Graphics* Graphics::m_instance = 0;
 
-Graphics::Graphics(): m_d3dRenderer(NULL)
+Graphics::Graphics(int screenWidth, int screenHeight, HWND hwnd) : m_d3dRenderer(0)
 {
+  Initialize(screenWidth, screenHeight, hwnd);
+  m_instance = this;
 }
 
 Graphics::~Graphics()
 {
+  m_instance = 0;
 }
 
 bool Graphics::Initialize(int screenWidth, int screenHeight, HWND hwnd)
@@ -36,7 +40,7 @@ void Graphics::Shutdown()
   {
     m_d3dRenderer->Shutdown();
     delete m_d3dRenderer;
-    m_d3dRenderer = NULL;
+    m_d3dRenderer = 0;
   }
 
   return;

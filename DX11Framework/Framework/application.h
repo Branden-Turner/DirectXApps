@@ -3,6 +3,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <vector>
 
 #include "input.h"
 #include "graphics.h"
@@ -30,9 +31,7 @@ class Application
     HINSTANCE m_hInstance;
     HWND m_hwnd;
 
-    // TODO: Change to systems that are just updated each frame. ( In other words, this will have an array of systems that's looped through )
-    Input* m_input;
-    Graphics* m_graphics;
+    std::vector<System*> m_systems;
 };
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);

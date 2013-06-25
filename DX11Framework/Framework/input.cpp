@@ -1,20 +1,15 @@
 #include "input.h"
 
+Input* Input::m_instance = 0;
 
 Input::Input()
 {
+  m_instance = this;
 }
-
-
-Input::Input(const Input& rhs)
-{
-}
-
 
 Input::~Input()
 {
 }
-
 
 void Input::Initialize()
 {

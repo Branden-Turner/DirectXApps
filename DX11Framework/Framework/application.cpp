@@ -1,6 +1,6 @@
 #include "application.h"
 
-Application::Application() : m_input(NULL), m_graphics(NULL)
+Application::Application()
 {
 }
 
@@ -15,7 +15,6 @@ Application::~Application()
 bool Application::Initialize()
 {
   int screenWidth, screenHeight;
-  bool result;
 
   // Initialize return variables
   screenWidth = 0;
@@ -26,44 +25,28 @@ bool Application::Initialize()
 
   /// TODO: serialize in systems so that they're created an initialized all at once.
 
-  // Create the input object.  This object will be used to handle reading the keyboard input from the user.
-  m_input = new Input();
-  if(!m_input)
-    return false;
+  Input* input = new Input();
+  Graphics* gfx = new Graphics(screenWidth, screenHeight, m_hwnd);
 
-  // Setup Input
-  m_input->Initialize();
+  m_systems.push_back( input );
+  m_systems.push_back( gfx );
 
-  // Create and setup Graphics
-  m_graphics = new Graphics();
-  if(!m_graphics)
-    return false;
-
-  result = m_graphics->Initialize(screenWidth, screenHeight, m_hwnd);
-  if(!result)
-    return false;
+  // Call the main init function of all systems.
+  for( System* sys : m_systems ) sys->Initialize();
 
   return true;
 }
 
 void Application::Shutdown()
 {
-  // TODO make this a loop through all the systems in the application.
-
-  // Release the graphics object.
-  if(m_graphics)
+  // Shutdown all systems
+  for( System* sys : m_systems ) 
   {
-    m_graphics->Shutdown();
-    delete m_graphics;
-    m_graphics = NULL;
+    sys->Shutdown();
+    delete sys;
+    sys = 0;
   }
-
-  // Release the input object.
-  if(m_input)
-  {
-    delete m_input;
-    m_input = NULL;
-  }
+  m_systems.clear();
 
   // Shutdown windows API stuff.
   ShutdownWindows();
@@ -84,7 +67,7 @@ void Application::Run()
   while(!done)
   {
     // Handle the windows messages.
-    if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    if(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
@@ -112,12 +95,12 @@ LRESULT CALLBACK Application::MessageHandler( HWND hwnd, UINT umsg, WPARAM wpara
   {
     case WM_KEYDOWN:
     {
-      m_input->KeyDown((unsigned)wparam);
+      Input::Instance()->KeyDown((unsigned)wparam);
       return 0;
     }
     case WM_KEYUP:
     {
-      m_input->KeyUp((unsigned)wparam);
+      Input::Instance()->KeyUp((unsigned)wparam);
       return 0;
     }
     // Any other messages send to the default message handler as our application won't make use of them.
@@ -130,18 +113,17 @@ LRESULT CALLBACK Application::MessageHandler( HWND hwnd, UINT umsg, WPARAM wpara
 
 bool Application::Update()
 {
-  // TODO: This should just loop through all systems calling update, and checking for results that may stop the engine.
-
-  bool result;
-
   // Check if the user pressed escape and wants to exit the application.
-  if(m_input->IsKeyDown(VK_ESCAPE))
+  if(Input::Instance()->IsKeyDown(VK_ESCAPE))
     return false;
 
-  // Do the frame processing for the graphics object.
-  result = m_graphics->Update();
-  if(!result)
-    return false;
+  // Call the main init function of all systems.
+  for( System* sys : m_systems )
+  {
+    // return false if an update fails.
+    if( !sys->Update() )
+      return false;
+  }
 
   return true;
 }
@@ -156,7 +138,7 @@ void Application::InitializeWindows( int& screenWidth, int& screenHeight )
   AppInstance = this;
 
   // Get the instance of this application.
-  m_hInstance = GetModuleHandle(NULL);
+  m_hInstance = GetModuleHandle(0);
 
   // Give the application a name.
   m_appName = L"DX11 Framework";
@@ -167,11 +149,11 @@ void Application::InitializeWindows( int& screenWidth, int& screenHeight )
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   wc.hInstance = m_hInstance;
-  wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+  wc.hIcon = LoadIcon(0, IDI_WINLOGO);
   wc.hIconSm = wc.hIcon;
-  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wc.hCursor = LoadCursor(0, IDC_ARROW);
   wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-  wc.lpszMenuName = NULL;
+  wc.lpszMenuName = 0;
   wc.lpszClassName = m_appName;
   wc.cbSize = sizeof(WNDCLASSEX);
 
@@ -211,17 +193,13 @@ void Application::InitializeWindows( int& screenWidth, int& screenHeight )
   }
 
   // Create the window with the screen settings and get the handle to it.
-  m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_appName, m_appName, 
-    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-    posX, posY, screenWidth, screenHeight, NULL, NULL, m_hInstance, NULL);
+  m_hwnd = CreateWindow(m_appName, m_appName, WS_OVERLAPPEDWINDOW,
+    posX, posY, screenWidth, screenHeight, 0, 0, m_hInstance, 0);
 
   // Bring the window up on the screen and set it as main focus.
   ShowWindow(m_hwnd, SW_SHOW);
   SetForegroundWindow(m_hwnd);
   SetFocus(m_hwnd);
-
-  // Hide the mouse cursor.
-  ShowCursor(false);
 
   return;
 }
@@ -233,20 +211,18 @@ void Application::ShutdownWindows()
 
   // Fix the display settings if leaving full screen mode.
   if(FULL_SCREEN)
-  {
-    ChangeDisplaySettings(NULL, 0);
-  }
+    ChangeDisplaySettings(0, 0);
 
   // Remove the window.
   DestroyWindow(m_hwnd);
-  m_hwnd = NULL;
+  m_hwnd = 0;
 
   // Remove the application instance.
   UnregisterClass(m_appName, m_hInstance);
-  m_hInstance = NULL;
+  m_hInstance = 0;
 
   // Release the pointer to this class.
-  AppInstance = NULL;
+  AppInstance = 0;
 
   return;
 }

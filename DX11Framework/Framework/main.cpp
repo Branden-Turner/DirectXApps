@@ -18,7 +18,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
   // Cleanup after application runs
   application->Shutdown();
   delete application;
-  application = NULL;
+  application = 0;
 
   return 0;
 }
